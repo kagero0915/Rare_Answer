@@ -1,0 +1,86 @@
+<header>
+  <h1>レアアンサー</h1>
+  <nav>
+    <ul>
+      <li><%= User.find(session[:user]).user_name %>やで</li>
+      <% if Good.first %>
+        <li><a href="/good_list/<%= Good.find_by(session[:user]).id %>">なんでやねんリスト</a></li>
+      <% end %>
+      <li><a href="/post">これどや！</a></li>
+      <li><a href="/signout">ほなさいなら</a></li>
+    </ul>
+  </nav>
+</header>
+<main>
+  <% @posts.each do |post| %>
+    <div class="contents">
+      <div class ="trim">
+        <img src="<%= post.photo %>" width="500">
+        <div class="mask">
+          <div class="comment">
+            <h3>言いたいことは言わなあかん！</h3>
+            <% post.comments.all.each do |comment| %>
+              <p><%= comment.user.user_name %></p>
+              <p><%= comment.comment %></p>
+              <% if session[:user] == comment.user_id %>
+                <form action="/delete/comment/<%= comment.id %>" method="get">
+                  <input type="submit" value="いらへん...">
+                </form>
+              <% end %>
+              <br>
+            <% end %>
+            <br>
+            <form action="/comment/<%= post.id %>/<%= session[:user] %>" method="get">
+              <input type="text" name="comment">
+              <input type="submit" value="言わせてーな">
+            </form>
+          </div>
+      </div>
+      </div>
+      <h1><%= post.user.user_name %></h1>
+      <div class="tsukkomi">
+        <div class="count" data-p_id="<%= post.id %>">
+          <h2>なんでやねん！！：  <%= post.fovo %></h2>
+         </div>
+        <% if session[:user] == post.user_id %>
+          <form action="/delete/post/<%= post.id %>" method="get">
+            <input type="submit" value="いらへん...">
+          </form>
+        <% end %>
+        <% if good_find(post.id, session[:user]).good == false %>
+            <button data-g_id="<%= good_find(post.id, session[:user]).id %>" data-p_id="<%= post.id %>" class="good">なんでやねん！！</button>
+        <% else %>
+            <button data-g_id="<%= good_find(post.id, session[:user]).id %>" data-p_id="<%= post.id %>" class="bad">なんでもないねん！！</button>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</main>
+<script>
+  $(document).on("click", ".good", function() {
+    var g_id = $(this).data("g_id");
+    var p_id = $(this).data("p_id");
+    $.ajax({
+      url: "/good+1/" + g_id + "/" + p_id,
+      method: "POST",
+      success: function(n) {
+        $(".count[data-p_id="+ p_id +"] h2").text("なんでやねん！！：" + n);
+        $(".good[data-p_id="+ p_id +"]").removeClass("good").addClass("bad");
+        $(".bad").text("なんでもないねん！！");
+      }
+    });
+  });
+  $(document).on("click", ".bad", function() {
+    var g_id = $(this).data("g_id");
+    var p_id = $(this).data("p_id");
+    $.ajax({
+      url: "/good-1/" + g_id + "/" + p_id,
+      method: "POST",
+      success: function(n) {
+        $(".count[data-p_id="+ p_id +"] h2").text("なんでやねん！！：" + n);
+        $(".bad[data-p_id="+ p_id +"]").removeClass("bad").addClass("good");
+        $(".good").text("なんでやねん！！");
+      }
+    });
+  });
+</script>
